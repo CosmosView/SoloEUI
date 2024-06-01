@@ -35,7 +35,7 @@ jobs:
       run: |
         python createhtml.py
     - name: Git commit
-    - uses: stefanzweifel/git-auto-commit-action@v5
+      uses: stefanzweifel/git-auto-commit-action@v5
 
 
 
