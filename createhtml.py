@@ -45,7 +45,7 @@ def generate_html(images_folder):
 
     # 用于记录图片数量，确保每两张并排
     count = 0
-    for image_name in os.listdir(images_folder):
+    for image_name in sorted(os.listdir(images_folder)):
         # 检查文件是否是图片（这里假设所有图片都是.png格式）
         if image_name.endswith('.png'):
             # 每两张图片开启一个新的行
