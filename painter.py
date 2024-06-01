@@ -6,13 +6,30 @@ import requests
 import re
 import os
 
-def getFirstFilename(directory):
+def getSecondFilename(directory):
     files_and_dirs = os.listdir(directory)
     files = [f for f in files_and_dirs if os.path.isfile(os.path.join(directory, f))]
-    if files:
-        return files[0]  
+    if len(files) > 1:
+        return files[1]  
     else:
         return None
+    
+def DeleFilesInFolder(folder_path):
+    if not os.path.exists(folder_path):
+        print("Folder not exist: ", folder_path)
+        return
+
+    for filename in os.listdir(folder_path):
+        file_path = os.path.join(folder_path, filename)
+        try:
+            if os.path.isfile(file_path) or os.path.islink(file_path):
+                os.unlink(file_path)  
+                print(f"File deleted: {file_path}")
+            elif os.path.isdir(file_path):
+                os.rmdir(file_path)  
+                print(f"Empty folder deleted: {file_path}")
+        except Exception as e:
+            print(f'Failed to delete {file_path}. Reason: {e}')
 
 def fitsDownloader():
     url = "https://www.sidc.be/EUI/data/lastDayFSI/"
@@ -24,10 +41,12 @@ def fitsDownloader():
         return fits_dict
     else:
         fits_list = re.findall(r'href="([^"]+\.fits)"', response.text)
-        if fits_list:
-            if fits_list[0] == getFirstFilename('fits'):
+        if len(fits_list) > 1:
+            if fits_list[1] == getSecondFilename('fits'):
                 return fits_dict
         print('Number of Images: ' + str(len(fits_list)))
+        DeleFilesInFolder('Images')
+        DeleFilesInFolder('fits')
         for fits_file in fits_list:
             url_fits = url + fits_file
             save_path = './fits/' + fits_file
