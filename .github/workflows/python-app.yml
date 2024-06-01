@@ -29,8 +29,10 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
     - name: Run painter
+      run: |
         python painter.py
     - name: Create html
+      run: |
         python createhtml.py
     - name: Git commit
     - uses: stefanzweifel/git-auto-commit-action@v5
