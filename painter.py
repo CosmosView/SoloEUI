@@ -4,17 +4,29 @@ import astropy.units as u
 from astropy.coordinates import SkyCoord
 import requests
 import re
+import os
+
+def getFirstFilename(directory):
+    files_and_dirs = os.listdir(directory)
+    files = [f for f in files_and_dirs if os.path.isfile(os.path.join(directory, f))]
+    if files:
+        return files[0]  
+    else:
+        return None
 
 def fitsDownloader():
     url = "https://www.sidc.be/EUI/data/lastDayFSI/"
     response = requests.get(url)
-    url_dict = []
+    fits_dict = []
 
     if response.status_code != 200:
         print('Request Error: status code ' + str(response.status_code))
-        return url_dict
+        return fits_dict
     else:
         fits_list = re.findall(r'href="([^"]+\.fits)"', response.text)
+        if fits_list:
+            if fits_list[0] == getFirstFilename('fits'):
+                return fits_dict
         print('Number of Images: ' + str(len(fits_list)))
         for fits_file in fits_list:
             url_fits = url + fits_file
@@ -62,7 +74,7 @@ if fits_list:
         saveMap(fits_path, file_name=img_name)
     print('All Done!')
 else:
-    print('Error: empty file list')
+    print('Empty file list')
 
 
 
