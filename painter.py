@@ -7,7 +7,7 @@ import re
 import os
 
 def getSecondFilename(directory):
-    files_and_dirs = os.listdir(directory)
+    files_and_dirs = sorted(os.listdir(directory))
     files = [f for f in files_and_dirs if os.path.isfile(os.path.join(directory, f))]
     if len(files) > 1:
         return files[1]  
