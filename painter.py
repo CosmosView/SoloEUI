@@ -43,6 +43,23 @@ def ifExists(path):
     else:
         print(f"Directory already exists: {path}")
 
+def deleteFilesinFolder(folder_path):
+    if not os.path.exists(folder_path):
+        print("Folder not exist:", folder_path)
+        return
+
+    for filename in os.listdir(folder_path):
+        file_path = os.path.join(folder_path, filename)
+        try:
+            if os.path.isfile(file_path) or os.path.islink(file_path):
+                os.unlink(file_path)  
+                print(f"Deleted file: {file_path}")
+            elif os.path.isdir(file_path):
+                os.rmdir(file_path) 
+                print(f"Delted empty folder: {file_path}")
+        except Exception as e:
+             print(f'Fail to delte {file_path}. {e}')
+
 
 def fitsDownloader():
     url = "https://www.sidc.be/EUI/data/lastDayFSI/"
@@ -53,6 +70,8 @@ def fitsDownloader():
         print('Request Error: status code ' + str(response.status_code))
     else:
         if decideUpdate(response.text):
+            deleteFilesinFolder(image_save_path)
+            deleteFilesinFolder(fits_save_path)
             fits_list = re.findall(r'href="([^"]+\.fits)"', response.text)
             if fits_list:
                 print('Number of Images: ' + str(len(fits_list)))
