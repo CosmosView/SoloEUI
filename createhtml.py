@@ -67,7 +67,7 @@ def generate_html(images_folder):
     html_content += '''
     </div>
     <br>
-    <p><b>Note:</b>The 0° latitude and 0°/180° longitude lines in the Stonyhurst heliographic coordinates were plotted on the images to help determine the positional relationship between the satellite and the Earth. Details of the satellite's location can be found <a href="https://www.cosmos.esa.int/web/solar-orbiter/where-is-solar-orbiter" target="_blank">here</a>. <b>Data are uncalibrated and should be used with caution.</b> </p>
+    <p><b>Note:</b>The 0&deg; latitude and 0&deg;/180&deg; longitude lines in the Stonyhurst heliographic coordinates were plotted on the images to help determine the positional relationship between the satellite and the Earth. Details of the satellite's location can be found <a href="https://www.cosmos.esa.int/web/solar-orbiter/where-is-solar-orbiter" target="_blank">here</a>. <b>Data are uncalibrated and should be used with caution.</b> </p>
     <br><br>
 </body>
 </html>
