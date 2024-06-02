@@ -1,11 +1,12 @@
 import os
 from datetime import datetime
 
+image_save_path = './public/Images'
+html_save_path = './public/'
+
 def generate_html(images_folder):
-    # 获取当前的UTC时间
     current_utc_time = datetime.utcnow().strftime('%Y-%m-%d %H:%M UTC')
 
-    # 创建HTML文档的基本结构，包括CSS样式设置
     html_content = f'''
 <!DOCTYPE html>
 <html>
@@ -43,32 +44,25 @@ def generate_html(images_folder):
     <div class="gallery">
 '''
 
-    # 用于记录图片数量，确保每两张并排
     count = 0
     for image_name in sorted(os.listdir(images_folder)):
-        # 检查文件是否是图片（这里假设所有图片都是.png格式）
+        html_image_path = os.path.relpath(images_folder, html_save_path)
         if image_name.endswith('.png'):
-            # 每两张图片开启一个新的行
             if count % 2 == 0:
                 if count > 0:
                     html_content += '</div>'
                 html_content += '<div class="img-container">'
-            # 添加图片
-            html_content += f'<img src="{images_folder}/{image_name}" alt="{image_name}">'
+            html_content += f'<img src="{html_image_path}/{image_name}" alt="{image_name}">'
             count += 1
 
-    # 确保最后一个容器被正确关闭
     if count % 2 != 0:
         html_content += '</div>'
 
-    # 结束gallery容器和HTML文档
     html_content += '</div></body></html>'
 
-    # 写入HTML内容到文件
-    with open('index.html', 'w') as file:
+    with open(html_save_path + 'index.html', 'w') as file:
         file.write(html_content)
 
-    print("HTML file 'index.html' has been created.")
+    print(f"HTML file {html_save_path}'index.html' has been created.")
 
-# 使用示例：将函数指向包含图片的文件夹路径
-generate_html('Images')
+generate_html(image_save_path)

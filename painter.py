@@ -5,55 +5,64 @@ from astropy.coordinates import SkyCoord
 import requests
 import re
 import os
+from bs4 import BeautifulSoup
+from datetime import datetime, timedelta
 
-def getSecondFilename(directory):
-    files_and_dirs = sorted(os.listdir(directory))
-    files = [f for f in files_and_dirs if os.path.isfile(os.path.join(directory, f))]
-    if len(files) > 1:
-        return files[1]  
-    else:
-        return None
+image_save_path = './public/Images/'
+fits_save_path = './fits/'
+hour_for_update = 3
+
+def decideUpdate(html_content):
+    soup = BeautifulSoup(html_content, 'html.parser')
+    fits_link = soup.find('a', href=lambda href: href and 'fits' in href)
+    if fits_link:
     
-def DeleFilesInFolder(folder_path):
-    if not os.path.exists(folder_path):
-        print("Folder not exist: ", folder_path)
-        return
+        details = fits_link.parent.get_text()
+        
+        last_modified_match = re.search(r'\d{4}-\d{2}-\d{2} \d{2}:\d{2}', details)
+        if last_modified_match:
+            last_modified_time_str = last_modified_match.group(0)
+            last_modified_time = datetime.strptime(last_modified_time_str, '%Y-%m-%d %H:%M')
+            current_time = datetime.utcnow()
+            time_difference = current_time - last_modified_time
 
-    for filename in os.listdir(folder_path):
-        file_path = os.path.join(folder_path, filename)
-        try:
-            if os.path.isfile(file_path) or os.path.islink(file_path):
-                os.unlink(file_path)  
-                print(f"File deleted: {file_path}")
-            elif os.path.isdir(file_path):
-                os.rmdir(file_path)  
-                print(f"Empty folder deleted: {file_path}")
-        except Exception as e:
-            print(f'Failed to delete {file_path}. Reason: {e}')
+            if time_difference < timedelta(hours=hour_for_update):
+                return True
+            else: 
+                print('No update')
+        else:
+            print("No 'Last modified' timestamp found in the text.")
+    else:
+        print("No FITS file link found in the HTML content.")
+    return False
+
+def ifExists(path):
+    if not os.path.exists(path):
+        os.makedirs(path)
+        print(f"Directory created: {path}")
+    else:
+        print(f"Directory already exists: {path}")
+
 
 def fitsDownloader():
     url = "https://www.sidc.be/EUI/data/lastDayFSI/"
-    response = requests.get(url)
-    fits_dict = []
+    response = requests.get(url + '?C=M;O=D')
+    fits_list = []
 
     if response.status_code != 200:
         print('Request Error: status code ' + str(response.status_code))
-        return fits_dict
     else:
-        fits_list = re.findall(r'href="([^"]+\.fits)"', response.text)
-        if len(fits_list) > 1:
-            if fits_list[1] == getSecondFilename('fits'):
-                return fits_dict
-        print('Number of Images: ' + str(len(fits_list)))
-        DeleFilesInFolder('Images')
-        DeleFilesInFolder('fits')
-        for fits_file in fits_list:
-            url_fits = url + fits_file
-            save_path = './fits/' + fits_file
-            r = requests.get(url_fits, timeout=10)
-            with open(save_path, "wb") as f:
-                f.write(r.content)
-        return fits_list
+        if decideUpdate(response.text):
+            fits_list = re.findall(r'href="([^"]+\.fits)"', response.text)
+            if fits_list:
+                print('Number of Images: ' + str(len(fits_list)))
+                for fits_file in fits_list:
+                    url_fits = url + fits_file
+                    save_path = fits_save_path + fits_file
+                    r = requests.get(url_fits, timeout=10)
+                    with open(save_path, "wb") as f:
+                        f.write(r.content)
+    return fits_list
     
 
 def saveMap(fits_file, file_name='save_fig.png', rotate=True, clean=False):
@@ -85,11 +94,13 @@ def saveMap(fits_file, file_name='save_fig.png', rotate=True, clean=False):
     
     plt.savefig(file_name, dpi=150)
     
+ifExists(image_save_path)
+ifExists(fits_save_path)
 fits_list = fitsDownloader()
 if fits_list:
     for fits_file in fits_list:
-        fits_path = './fits/' + fits_file
-        img_name = './Images/' + fits_file[:-5] + '.png'
+        fits_path = fits_save_path + fits_file
+        img_name = image_save_path + fits_file[:-5] + '.png'
         saveMap(fits_path, file_name=img_name)
     print('All Done!')
 else:
