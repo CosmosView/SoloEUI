@@ -8,7 +8,7 @@ import os
 from bs4 import BeautifulSoup
 from datetime import datetime, timedelta
 
-image_save_path = './public/Images/'
+image_save_path = './Images/'
 fits_save_path = './fits/'
 hour_for_update = 3
 

@@ -1,8 +1,8 @@
 import os
 from datetime import datetime
 
-image_save_path = './public/Images'
-html_save_path = './public/'
+image_save_path = './Images'
+html_save_path = './'
 
 def generate_html(images_folder):
     current_utc_time = datetime.utcnow().strftime('%Y-%m-%d %H:%M UTC')
