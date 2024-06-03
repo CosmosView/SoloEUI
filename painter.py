@@ -10,7 +10,7 @@ from datetime import datetime, timedelta
 
 image_save_path = './Images/'
 fits_save_path = './fits/'
-hour_for_update = 3
+hour_for_update = 4
 
 def decideUpdate(html_content):
     soup = BeautifulSoup(html_content, 'html.parser')
