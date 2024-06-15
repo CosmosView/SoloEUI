@@ -5,36 +5,47 @@ from astropy.coordinates import SkyCoord
 import requests
 import re
 import os
-from bs4 import BeautifulSoup
-from datetime import datetime, timedelta
+import shutil
 
-image_save_path = './Images/'
-fits_save_path = './fits/'
-hour_for_update = 4
+publish_url = 'https://www.cosmosview.top/SoloEUI/'
+fits_url = 'https://www.sidc.be/EUI/data/lastDayFSI/'
+image_save_path = './public/Images/'
+fits_save_path = './public/fits/'
 
-def decideUpdate(html_content):
-    soup = BeautifulSoup(html_content, 'html.parser')
-    fits_link = soup.find('a', href=lambda href: href and 'fits' in href)
-    if fits_link:
-    
-        details = fits_link.parent.get_text()
-        
-        last_modified_match = re.search(r'\d{4}-\d{2}-\d{2} \d{2}:\d{2}', details)
-        if last_modified_match:
-            last_modified_time_str = last_modified_match.group(0)
-            last_modified_time = datetime.strptime(last_modified_time_str, '%Y-%m-%d %H:%M')
-            current_time = datetime.utcnow()
-            time_difference = current_time - last_modified_time
+def fileDownloader(url, save_path, timeout = 10):
+    r = requests.get(url, timeout = timeout)
+    with open(save_path, "wb") as f:
+        f.write(r.content)
 
-            if time_difference < timedelta(hours=hour_for_update):
-                return True
-            else: 
-                print('No update')
-        else:
-            print("No 'Last modified' timestamp found in the text.")
+def getFitsList(fits_url):
+    response = requests.get(fits_url)
+    fits_list = []
+
+    if response.status_code != 200:
+        print('Error in requeseting data source: status code ' + str(response.status_code))
     else:
-        print("No FITS file link found in the HTML content.")
-    return False
+        fits_list = re.findall(r'href="([^"]+)\.fits"', response.text)
+        print('Number of data source images: ' + str(len(fits_list)))
+
+    # Format ['solo_L2_eui-fsi174-image_20240614T000045244_V00']
+    return fits_list
+
+def getExistImages(publish_url):
+    response = requests.get(publish_url)
+    images_list = []
+
+    if response.status_code != 200:
+        print('Error in requeseting published website: status code ' + str(response.status_code))
+    else:
+        # Format ['Images/solo_L2_eui-fsi174-image_20240614T000045244_V00.png']
+        images_list = re.findall(r'\bsrc="([^"]+\.png)"', response.text)
+        for image_path in images_list:
+            fileDownloader(publish_url + image_path, image_save_path + image_path.replace('Images/', '')) 
+        # Format ['solo_L2_eui-fsi174-image_20240614T000045244_V00']
+        images_list = [path.replace('Images/', '').replace('.png', '') for path in images_list]
+
+    return images_list
+
 
 def ifExists(path):
     if not os.path.exists(path):
@@ -42,47 +53,6 @@ def ifExists(path):
         print(f"Directory created: {path}")
     else:
         print(f"Directory already exists: {path}")
-
-def deleteFilesinFolder(folder_path):
-    if not os.path.exists(folder_path):
-        print("Folder not exist:", folder_path)
-        return
-
-    for filename in os.listdir(folder_path):
-        file_path = os.path.join(folder_path, filename)
-        try:
-            if os.path.isfile(file_path) or os.path.islink(file_path):
-                os.unlink(file_path)  
-                print(f"Deleted file: {file_path}")
-            elif os.path.isdir(file_path):
-                os.rmdir(file_path) 
-                print(f"Delted empty folder: {file_path}")
-        except Exception as e:
-             print(f'Fail to delte {file_path}. {e}')
-
-
-def fitsDownloader():
-    url = "https://www.sidc.be/EUI/data/lastDayFSI/"
-    response = requests.get(url + '?C=M;O=D')
-    fits_list = []
-
-    if response.status_code != 200:
-        print('Request Error: status code ' + str(response.status_code))
-    else:
-        if decideUpdate(response.text):
-            deleteFilesinFolder(image_save_path)
-            deleteFilesinFolder(fits_save_path)
-            fits_list = re.findall(r'href="([^"]+\.fits)"', response.text)
-            if fits_list:
-                print('Number of Images: ' + str(len(fits_list)))
-                for fits_file in fits_list:
-                    url_fits = url + fits_file
-                    save_path = fits_save_path + fits_file
-                    r = requests.get(url_fits, timeout=10)
-                    with open(save_path, "wb") as f:
-                        f.write(r.content)
-    return fits_list
-    
 
 def saveMap(fits_file, file_name='save_fig.png', rotate=True, clean=False):
     map_data = sunpy.map.Map(fits_file)
@@ -112,18 +82,47 @@ def saveMap(fits_file, file_name='save_fig.png', rotate=True, clean=False):
         map_data.draw_grid(grid_spacing=grid_spacing)
     
     plt.savefig(file_name, dpi=150)
-    
+
+
+# Create Path    
 ifExists(image_save_path)
 ifExists(fits_save_path)
-fits_list = fitsDownloader()
-if fits_list:
-    for fits_file in fits_list:
-        fits_path = fits_save_path + fits_file
-        img_name = image_save_path + fits_file[:-5] + '.png'
-        saveMap(fits_path, file_name=img_name)
-    print('All Done!')
-else:
-    print('Empty file list')
+
+# Get exist images list and data source list 
+exist_images = getExistImages(publish_url)
+data_source_fits = getFitsList(fits_url)
+
+# Draw new images
+for fits in data_source_fits:
+    if fits in exist_images:
+        print(f'Image already exist: {fits}')
+    else:
+        url = fits_url + fits + '.fits'
+        fits_temp_path = fits_save_path + fits + '.fits'
+        fileDownloader(url, fits_temp_path)
+        png_save_path = image_save_path + fits + '.png'
+        print(f'Drawing: {png_save_path}')
+        saveMap(fits_temp_path, png_save_path)
+        exist_images.append(fits)
+
+# Remove source fits file
+try:
+    shutil.rmtree(fits_save_path)
+    print("Fits Folder Deleted.")
+except Exception as e:
+    print(f"Error: {e}")
 
 
+# Remove old images
+if len(data_source_fits) > 3:
+    for image in exist_images:
+        if image not in data_source_fits:
+            try:
+                file_path = image_save_path + image + '.png'
+                os.remove(file_path)
+                print(f'Image deleted: {file_path}')
+            except OSError as error:
+                print(f"Error: {error.strerror}")
+
+print('All Done!')
 

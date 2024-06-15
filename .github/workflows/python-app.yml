@@ -21,7 +21,7 @@ jobs:
     steps:
     - uses: actions/checkout@v4
       with:
-        ref: gh-pages
+        ref: main
     - name: Set up Python 3.9
       uses: actions/setup-python@v3
       with:
@@ -36,9 +36,11 @@ jobs:
     - name: Create html
       run: |
         python createhtml.py
-    - name: Git commit
-      uses: stefanzweifel/git-auto-commit-action@v5
-
+    - name: Deploy
+      uses: peaceiris/actions-gh-pages@v4
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: ./public
 
 
 
