@@ -80,7 +80,19 @@ def saveMap(fits_file, file_name='save_fig.png', rotate=True, clean=False):
         # map_data.draw_limb()
         grid_spacing = 180 * u.deg
         map_data.draw_grid(grid_spacing=grid_spacing)
-    
+        ax.text(
+            x=1,  # x为1表示轴的最右端
+            y=0,  # y为0表示轴的最底部
+            s='www.cosmosview.top/SoloEUI',  # 文本内容
+            ha='right',  # 水平对齐方式为'right'
+            va='bottom',  # 垂直对齐方式为'bottom'
+            alpha=0.8,
+            fontsize=8,  # 字体大小
+            color='silver',  # 字体颜色
+            family='monospace',  # 字体类型
+            transform=ax.transAxes  # 使用轴的比例尺进行转换
+        )
+
     plt.savefig(file_name, dpi=150)
 
 
@@ -91,7 +103,6 @@ ifExists(fits_save_path)
 # Get exist images list and data source list 
 exist_images = getExistImages(publish_url)
 data_source_fits = getFitsList(fits_url)
-
 # Draw new images
 for fits in data_source_fits:
     if fits in exist_images:
