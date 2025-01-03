@@ -25,6 +25,11 @@ def getFitsList(fits_url):
         print('Error in requeseting data source: status code ' + str(response.status_code))
     else:
         fits_list = re.findall(r'href="([^"]+)\.fits"', response.text)
+        fits_list = [item for item in fits_list if 'short' not in item.lower()]
+        if len(fits_list) > 8:
+            interval = len(fits_list) // 8
+            new_fits_list = [fits_list[i * interval] for i in range(8)]
+            fits_list = new_fits_list
         print('Number of data source images: ' + str(len(fits_list)))
 
     # Format ['solo_L2_eui-fsi174-image_20240614T000045244_V00']
