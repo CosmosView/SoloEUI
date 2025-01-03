@@ -8,7 +8,7 @@ import os
 import shutil
 
 publish_url = 'https://www.cosmosview.top/SoloEUI/'
-fits_url = 'https://www.sidc.be/EUI/data/lastDayFSI/'
+fits_url = 'https://www.sidc.be/EUI/data/lastDayFSI/?C=M;O=D'
 image_save_path = './public/Images/'
 fits_save_path = './public/fits/'
 
