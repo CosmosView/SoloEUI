@@ -20,13 +20,26 @@ def fileDownloader(url, save_path, timeout = 10):
 def getFitsList(fits_url):
     response = requests.get(fits_url)
     fits_list = []
-
     if response.status_code != 200:
         print('Error in requeseting data source: status code ' + str(response.status_code))
     else:
         fits_list = re.findall(r'href="([^"]+)\.fits"', response.text)
+        fits_list = [item for item in fits_list if 'short' not in item.lower()]
+        
+        fits_list_174 = [item for item in fits_list if 'fsi174' in item]
+        fits_list_304 = [item for item in fits_list if 'fsi304' in item]
+        
+        if len(fits_list_174) > 4:
+            interval_174 = len(fits_list_174) // 4
+            fits_list_174 = [fits_list_174[i * interval_174] for i in range(4)]
+        
+        if len(fits_list_304) > 4:
+            interval_304 = len(fits_list_304) // 4
+            fits_list_304 = [fits_list_304[i * interval_304] for i in range(4)]
+        
+        fits_list = fits_list_174 + fits_list_304
+        
         print('Number of data source images: ' + str(len(fits_list)))
-
     # Format ['solo_L2_eui-fsi174-image_20240614T000045244_V00']
     return fits_list
 
