@@ -29,21 +29,21 @@ def getFitsList(fits_url):
         fits_list_174 = [item for item in fits_list if 'fsi174' in item]
         fits_list_304 = [item for item in fits_list if 'fsi304' in item]
         
-        if len(fits_list_174) > 4:
+        if len(fits_list_174) > 5:
             last_174 = fits_list_174[-1]
             remaining_174 = fits_list_174[:-1]
             
-            interval_174 = len(remaining_174) // 3
-            selected_174 = [remaining_174[i * interval_174] for i in range(3)]
+            interval_174 = len(remaining_174) // 4
+            selected_174 = [remaining_174[i * interval_174] for i in range(4)]
             
             fits_list_174 = selected_174 + [last_174]
         
-        if len(fits_list_304) > 4:
+        if len(fits_list_304) > 5:
             last_304 = fits_list_304[-1]
             remaining_304 = fits_list_304[:-1]
             
-            interval_304 = len(remaining_304) // 3
-            selected_304 = [remaining_304[i * interval_304] for i in range(3)]
+            interval_304 = len(remaining_304) // 4
+            selected_304 = [remaining_304[i * interval_304] for i in range(4)]
             
             fits_list_304 = selected_304 + [last_304]
         
@@ -61,11 +61,13 @@ def getExistImages(publish_url):
         print('Error in requeseting published website: status code ' + str(response.status_code))
     else:
         # Format ['Images/solo_L2_eui-fsi174-image_20240614T000045244_V00.png']
-        images_list = re.findall(r'\bsrc="([^"]+\.png)"', response.text)
+        images_list = re.findall(r'"(solo[^"]+\.png)"', response.text)
+        base_path = image_save_path.rstrip('/')
+        last_folder = os.path.basename(base_path) + '/'
         for image_path in images_list:
-            fileDownloader(publish_url + image_path, image_save_path + image_path.replace('Images/', '')) 
+            fileDownloader(publish_url + last_folder + image_path, image_save_path + image_path) 
         # Format ['solo_L2_eui-fsi174-image_20240614T000045244_V00']
-        images_list = [path.replace('Images/', '').replace('.png', '') for path in images_list]
+        images_list = [path.replace('.png', '') for path in images_list]
 
     return images_list
 
