@@ -30,12 +30,22 @@ def getFitsList(fits_url):
         fits_list_304 = [item for item in fits_list if 'fsi304' in item]
         
         if len(fits_list_174) > 4:
-            interval_174 = len(fits_list_174) // 4
-            fits_list_174 = [fits_list_174[i * interval_174] for i in range(4)]
+            last_174 = fits_list_174[-1]
+            remaining_174 = fits_list_174[:-1]
+            
+            interval_174 = len(remaining_174) // 3
+            selected_174 = [remaining_174[i * interval_174] for i in range(3)]
+            
+            fits_list_174 = selected_174 + [last_174]
         
         if len(fits_list_304) > 4:
-            interval_304 = len(fits_list_304) // 4
-            fits_list_304 = [fits_list_304[i * interval_304] for i in range(4)]
+            last_304 = fits_list_304[-1]
+            remaining_304 = fits_list_304[:-1]
+            
+            interval_304 = len(remaining_304) // 3
+            selected_304 = [remaining_304[i * interval_304] for i in range(3)]
+            
+            fits_list_304 = selected_304 + [last_304]
         
         fits_list = fits_list_174 + fits_list_304
         
